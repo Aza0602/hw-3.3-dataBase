@@ -1,6 +1,13 @@
-package ru.hogwarts.school.model;
+package ru.hogwarts.school.entity;
 
+import javax.persistence.*;
+
+@Entity
+@Table(name = "students")
 public class Student {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String name;
     private int age;

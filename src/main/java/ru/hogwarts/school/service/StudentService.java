@@ -1,7 +1,7 @@
 package ru.hogwarts.school.service;
 
 import org.springframework.stereotype.Service;
-import ru.hogwarts.school.model.Student;
+import ru.hogwarts.school.entity.Student;
 
 import java.util.*;
 import java.util.stream.Collectors;
