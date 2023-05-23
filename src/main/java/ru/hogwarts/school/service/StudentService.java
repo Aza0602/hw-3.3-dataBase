@@ -2,6 +2,7 @@ package ru.hogwarts.school.service;
 
 import org.springframework.stereotype.Service;
 import ru.hogwarts.school.entity.Student;
+import ru.hogwarts.school.repository.StudentRepository;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -9,38 +10,43 @@ import java.util.stream.Collectors;
 @Service
 public class StudentService {
 
-    private long counterId = 0;
-    private final Map<Long, Student> students = new HashMap<>();
+    private final StudentRepository studentRepository;
 
-    public Student add(Student student) {
-        student.setId(++counterId);
-        students.put(student.getId(), student);
-        return student;
+    public StudentService(StudentRepository studentRepository) {
+        this.studentRepository = studentRepository;
     }
 
-    public Optional<Student> update(Long id, Student student) {
-        if (students.containsKey(id)) {
-            students.replace(id, student);
-            return Optional.of(student);
-        }
-        return Optional.empty();
+    public Student add(Student student) {
+        student.setId(null);
+        return studentRepository.save(student);
+    }
+
+    public Optional<Student> update(Long id, Student newStudent) {
+        return studentRepository.findById(id)
+                .map(oldStudent -> {
+                    oldStudent.setName(newStudent.getName());
+                    oldStudent.setAge(newStudent.getAge());
+                    return studentRepository.save(oldStudent);
+                });
     }
 
     public Optional<Student> getById(Long id) {
-        return Optional.ofNullable(students.get(id));
+        return studentRepository.findById(id);
     }
 
     public Collection<Student> getAll() {
-        return Collections.unmodifiableCollection(students.values());
+        return Collections.unmodifiableCollection(studentRepository.findAll());
     }
 
     public Optional<Student> deleteById(Long id) {
-        return Optional.ofNullable(students.remove(id));
+        return studentRepository.findById(id)
+                .map(student -> {
+                    studentRepository.deleteById(id);
+                    return student;
+                });
     }
 
     public Collection<Student> getAllByAge(int age) {
-        return students.values().stream()
-                .filter(student -> student.getAge() == age)
-                .collect(Collectors.toList());
+        return studentRepository.findAllByAge(age);
     }
 }
