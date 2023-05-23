@@ -1,7 +1,8 @@
 package ru.hogwarts.school.service;
 
 import org.springframework.stereotype.Service;
-import ru.hogwarts.school.model.Faculty;
+import ru.hogwarts.school.entity.Faculty;
+import ru.hogwarts.school.repository.FacultyRepository;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -9,38 +10,43 @@ import java.util.stream.Collectors;
 @Service
 public class FacultyService {
 
-    private long counterId = 0;
-    private final Map<Long, Faculty> faculties = new HashMap<>();
+    private final FacultyRepository facultyRepository;
 
-    public Faculty add(Faculty faculty) {
-        faculty.setId(++counterId);
-        faculties.put(faculty.getId(), faculty);
-        return faculty;
+    public FacultyService(FacultyRepository facultyRepository) {
+        this.facultyRepository = facultyRepository;
     }
 
-    public Optional<Faculty> update(Long id, Faculty faculty) {
-        if (faculties.containsKey(id)) {
-            faculties.replace(id, faculty);
-            return Optional.of(faculty);
-        }
-        return Optional.empty();
+    public Faculty add(Faculty faculty) {
+        faculty.setId(null);
+        return facultyRepository.save(faculty);
+    }
+
+    public Optional<Faculty> update(Long id, Faculty newfaculty) {
+        return facultyRepository.findById(id)
+                .map(oldFaculty -> {
+                    oldFaculty.setName(newfaculty.getName());
+                    oldFaculty.setColor(newfaculty.getColor());
+                    return facultyRepository.save(oldFaculty);
+                });
     }
 
     public Optional<Faculty> getById(Long id) {
-        return Optional.ofNullable(faculties.get(id));
+        return facultyRepository.findById(id);
     }
 
     public Collection<Faculty> getAll() {
-        return Collections.unmodifiableCollection(faculties.values());
+        return Collections.unmodifiableCollection(facultyRepository.findAll());
     }
 
     public Optional<Faculty> deleteById(Long id) {
-        return Optional.ofNullable(faculties.remove(id));
+        return facultyRepository.findById(id)
+                .map(faculty -> {
+                    facultyRepository.deleteById(id);
+                    return faculty;
+                });
     }
 
     public Collection<Faculty> getAllByColor(String color) {
-        return faculties.values().stream()
-                .filter(faculty -> faculty.getColor().equals(color))
-                .collect(Collectors.toList());
+        return facultyRepository.findAllByColor(color);
     }
 }
